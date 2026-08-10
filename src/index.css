@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    @apply font-sans bg-cream text-oxford antialiased;
+    font-size: 15px;
+  }
+  h1, h2, h3, h4, h5 { @apply font-syne; }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply bg-oxford text-white px-5 py-2.5 rounded-xl text-sm font-medium
+           hover:bg-rose transition-colors duration-200 disabled:opacity-50
+           disabled:cursor-not-allowed flex items-center gap-2;
+  }
+  .btn-secondary {
+    @apply bg-white text-oxford border border-border px-5 py-2.5 rounded-xl
+           text-sm font-medium hover:bg-cream transition-colors duration-200
+           flex items-center gap-2;
+  }
+  .btn-danger {
+    @apply bg-red-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium
+           hover:bg-red-700 transition-colors duration-200 flex items-center gap-2;
+  }
+  .btn-ghost {
+    @apply text-oxford px-4 py-2 rounded-xl text-sm font-medium
+           hover:bg-oxford/5 transition-colors duration-200 flex items-center gap-2;
+  }
+
+  /* ── Cards ── */
+  .card {
+    @apply bg-white border border-border rounded-2xl shadow-card p-6;
+  }
+  .card-sm {
+    @apply bg-white border border-border rounded-xl shadow-card p-4;
+  }
+
+  /* ── Form elements ── */
+  .form-label {
+    @apply block text-xs font-medium text-muted uppercase tracking-wide mb-1.5;
+  }
+  .form-input {
+    @apply w-full bg-white border border-border rounded-xl px-4 py-2.5 text-sm
+           text-oxford placeholder:text-muted/60 outline-none
+           focus:border-oxford focus:ring-2 focus:ring-oxford/10
+           transition-all duration-200;
+  }
+  .form-select {
+    @apply w-full bg-white border border-border rounded-xl px-4 py-2.5 text-sm
+           text-oxford outline-none focus:border-oxford focus:ring-2
+           focus:ring-oxford/10 transition-all duration-200 cursor-pointer;
+  }
+  .form-textarea {
+    @apply w-full bg-white border border-border rounded-xl px-4 py-2.5 text-sm
+           text-oxford placeholder:text-muted/60 outline-none
+           focus:border-oxford focus:ring-2 focus:ring-oxford/10
+           transition-all duration-200 resize-none;
+  }
+
+  /* ── Badges ── */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-blue   { @apply bg-blue-50   text-blue-700; }
+  .badge-green  { @apply bg-green-50  text-green-700; }
+  .badge-amber  { @apply bg-amber-50  text-amber-700; }
+  .badge-red    { @apply bg-red-50    text-red-700; }
+  .badge-oxford { @apply bg-oxford    text-white; }
+  .badge-rose   { @apply bg-rose/10   text-rose; }
+  .badge-gray   { @apply bg-gray-100  text-gray-600; }
+
+  /* ── Stat card ── */
+  .stat-card {
+    @apply card flex flex-col gap-1;
+  }
+  .stat-value {
+    @apply font-syne text-3xl font-extrabold text-oxford;
+  }
+  .stat-label {
+    @apply text-xs text-muted uppercase tracking-wide;
+  }
+  .stat-change-up   { @apply text-xs text-green-600 font-medium; }
+  .stat-change-down { @apply text-xs text-red-500 font-medium; }
+
+  /* ── Page header ── */
+  .page-header {
+    @apply flex items-center justify-between mb-6;
+  }
+  .page-title {
+    @apply font-syne text-2xl font-extrabold text-oxford;
+  }
+  .page-sub {
+    @apply text-sm text-muted mt-0.5;
+  }
+
+  /* ── Table ── */
+  .table-wrap {
+    @apply w-full overflow-x-auto;
+  }
+  .table {
+    @apply w-full text-sm border-collapse;
+  }
+  .table thead tr {
+    @apply border-b border-border;
+  }
+  .table thead th {
+    @apply text-left text-xs font-medium text-muted uppercase tracking-wide
+           py-3 px-4;
+  }
+  .table tbody tr {
+    @apply border-b border-border hover:bg-cream/50 transition-colors;
+  }
+  .table tbody td {
+    @apply py-3.5 px-4 text-oxford;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+           text-white/60 hover:text-white hover:bg-white/10
+           transition-all duration-150 cursor-pointer;
+  }
+  .sidebar-link.active {
+    @apply text-white bg-white/15;
+  }
+
+  /* ── Status pill ── */
+  .status-pill {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #E2DDD8; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #C5BFBA; }
