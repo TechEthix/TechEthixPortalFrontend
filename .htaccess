@@ -1,16 +1,15 @@
-# Enable pretty URLs (remove .html extension)
-Options -Multiline +FollowSymLinks
-
-# Fix trailing slashes (canonical URLs)
+# Enable URL rewriting
+Options +FollowSymLinks
 RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^$ /index.html [L]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} !^/api/
-RewriteRule (.*) /index.html [L]
 
+# Handle SPA routing (React Router)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.html [L]
+
+# API routes should go directly to backend (no React routing)
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^(.*)$ $1 [L,QSA]
 # Security headers
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
@@ -18,15 +17,12 @@ RewriteRule (.*) /index.html [L]
     Header set X-XSS-Protection "1; mode=block"
 </IfModule>
 
-# Cache static assets
+# Cache static assets (improvements)
 <IfModule mod_expires.c>
     ExpiresActive On
-    ExpiresByType image/png "access 1 year"
-    ExpiresByType image/jpeg "access 1 year"
-    ExpiresByType image/webp "access 1 year"
-    ExpiresByType font/woff2 "access 1 year"
-    ExpiresByType font/woff "access 1 year"
-    ExpiresByType font/ttf "access 1 year"
-    ExpiresByType application/javascript "access 1 year"
-    ExpiresByType application/json "access 1 year"
+    ExpiresByType text/html "access 0s, max-age=60"
+    ExpiresByType application/javascript "access 0s, max-age=31536000"
+    ExpiresByType text/css "access 0s, max-age=31536000"
+    ExpiresByType image/* "access 0s, max-age=31536000"
+    ExpiresByType font/* "access 0s, max-age=31536000"
 </IfModule>
