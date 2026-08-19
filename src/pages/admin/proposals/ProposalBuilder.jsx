@@ -94,8 +94,9 @@ export default function ProposalBuilder() {
     }
   }
 
-  const advanceAmt = (form.price * 0.5).toFixed(0)
-  const finalAmt   = (form.price * 0.5).toFixed(0)
+  const advanceAmt  = (form.price * 0.35).toFixed(0)
+  const midpointAmt = (form.price * 0.35).toFixed(0)
+  const finalAmt    = (form.price * 0.30).toFixed(0)
 
   return (
     <div className="max-w-5xl space-y-6">
@@ -190,11 +191,15 @@ export default function ProposalBuilder() {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted">Advance (50%)</span>
+                  <span className="text-muted">Advance (35%)</span>
                   <span className="font-medium text-oxford">₹{Number(advanceAmt).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted">On Delivery (50%)</span>
+                  <span className="text-muted">Midpoint (35%)</span>
+                  <span className="font-medium text-oxford">₹{Number(midpointAmt).toLocaleString('en-IN')}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted">Final (30%)</span>
                   <span className="font-medium text-oxford">₹{Number(finalAmt).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="h-px bg-border my-2" />
@@ -310,20 +315,27 @@ function ProposalPreview({ form, lead }) {
       )}
 
       <div className="border-t border-border pt-6">
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="bg-cream rounded-xl p-4">
-            <p className="text-xs text-muted mb-1">Advance Payment (50%)</p>
-            <p className="font-syne font-800 text-oxford text-2xl">
-              ₹{Number(form.price * 0.5).toLocaleString('en-IN')}
+            <p className="text-xs text-muted mb-1">Advance (35%)</p>
+            <p className="font-syne font-800 text-oxford text-xl">
+              ₹{Number(form.price * 0.35).toLocaleString('en-IN')}
             </p>
-            <p className="text-xs text-muted mt-1">Due before project starts</p>
+            <p className="text-xs text-muted mt-1">Before project starts</p>
           </div>
           <div className="bg-cream rounded-xl p-4">
-            <p className="text-xs text-muted mb-1">Final Payment (50%)</p>
-            <p className="font-syne font-800 text-oxford text-2xl">
-              ₹{Number(form.price * 0.5).toLocaleString('en-IN')}
+            <p className="text-xs text-muted mb-1">Midpoint (35%)</p>
+            <p className="font-syne font-800 text-oxford text-xl">
+              ₹{Number(form.price * 0.35).toLocaleString('en-IN')}
             </p>
-            <p className="text-xs text-muted mt-1">Due on project delivery</p>
+            <p className="text-xs text-muted mt-1">At project midpoint</p>
+          </div>
+          <div className="bg-cream rounded-xl p-4">
+            <p className="text-xs text-muted mb-1">Final (30%)</p>
+            <p className="font-syne font-800 text-oxford text-xl">
+              ₹{Number(form.price * 0.30).toLocaleString('en-IN')}
+            </p>
+            <p className="text-xs text-muted mt-1">On final delivery</p>
           </div>
         </div>
         <div className="text-center space-y-3">

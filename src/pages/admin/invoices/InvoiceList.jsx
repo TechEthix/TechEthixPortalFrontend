@@ -3,40 +3,44 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../../api/axios'
 import toast from 'react-hot-toast'
+
 import {
   FileText, Plus, Download, CheckCircle,
-  Clock, Eye, X
+  Clock, Eye, X, Trash2, Edit2
 } from 'lucide-react'
 import clsx from 'clsx'
 
 const STATUS_STYLE = {
   draft: 'badge-gray',
-  sent:  'badge-blue',
-  paid:  'badge-green',
+  sent: 'badge-blue',
+  paid: 'badge-green',
 }
 
 const EMPTY_ITEM = { description: '', qty: 1, amount: '' }
 
 export default function InvoiceList() {
-  const [invoices,  setInvoices]  = useState([])
-  const [projects,  setProjects]  = useState([])
-  const [loading,   setLoading]   = useState(true)
-  const [showForm,  setShowForm]  = useState(false)
-  const [saving,    setSaving]    = useState(false)
+  const [invoices, setInvoices] = useState([])
+  const [projects, setProjects] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [editingInvoice, setEditingInvoice] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
+
 
   const [form, setForm] = useState({
-    project_id:    '',
-    template:      'indian',
-    currency:      'INR',
-    tax_percent:   18,
-    notes:         '',
-    due_date:      '',
-    client_name:   '',
-    client_email:  '',
-    client_phone:  '',
-    client_address:'',
-    client_gstin:  '',
-    items:         [{ ...EMPTY_ITEM }]
+    project_id: '',
+    template: 'indian',
+    currency: 'INR',
+    tax_percent: 18,
+    notes: '',
+    due_date: '',
+    client_name: '',
+    client_email: '',
+    client_phone: '',
+    client_address: '',
+    client_gstin: '',
+    items: [{ ...EMPTY_ITEM }]
   })
 
   const fetchInvoices = () => {
@@ -50,7 +54,7 @@ export default function InvoiceList() {
     fetchInvoices()
     api.get('/projects?limit=100')
       .then(r => setProjects(r.data.data || []))
-      .catch(() => {})
+      .catch(() => { })
   }, [])
 
   // Auto-fill client info when project selected
@@ -62,12 +66,12 @@ export default function InvoiceList() {
       const proj = data.data
       setForm(p => ({
         ...p,
-        project_id:   projectId,
-        client_name:  proj.client_name  || '',
+        project_id: projectId,
+        client_name: proj.client_name || '',
         client_email: proj.client_email || '',
         client_phone: proj.client_phone || '',
       }))
-    } catch {}
+    } catch { }
   }
 
   const addItem = () => setForm(p => ({ ...p, items: [...p.items, { ...EMPTY_ITEM }] }))
@@ -77,9 +81,9 @@ export default function InvoiceList() {
     items: p.items.map((item, idx) => idx === i ? { ...item, [field]: val } : item)
   }))
 
-  const subtotal   = form.items.reduce((a, item) => a + (parseFloat(item.amount || 0) * parseInt(item.qty || 1)), 0)
-  const taxAmount  = parseFloat(((subtotal * parseFloat(form.tax_percent || 0)) / 100).toFixed(2))
-  const total      = subtotal + taxAmount
+  const subtotal = form.items.reduce((a, item) => a + (parseFloat(item.amount || 0) * parseInt(item.qty || 1)), 0)
+  const taxAmount = parseFloat(((subtotal * parseFloat(form.tax_percent || 0)) / 100).toFixed(2))
+  const total = subtotal + taxAmount
 
   const handleSubmit = async e => {
     e.preventDefault()
@@ -87,9 +91,15 @@ export default function InvoiceList() {
     if (!form.items.length || !form.items[0].description) return toast.error('Add at least one line item.')
     setSaving(true)
     try {
-      await api.post('/invoices', { ...form, tax_percent: parseFloat(form.tax_percent) })
-      toast.success('Invoice created.')
+      if (editingInvoice) {
+        await api.put(`/invoices/${editingInvoice}`, form)
+        toast.success('Invoice updated.')
+      } else {
+        await api.post('/invoices', { ...form, tax_percent: parseFloat(form.tax_percent) })
+        toast.success('Invoice created.')
+      }
       setShowForm(false)
+      setEditingInvoice(null)
       fetchInvoices()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed.')
@@ -111,6 +121,39 @@ export default function InvoiceList() {
   }
 
   const sym = form.template === 'indian' ? '₹' : '$'
+
+  const handleDeleteInvoice = async (id, invoiceNumber) => {
+    if (!confirm(`Delete invoice ${invoiceNumber}? This cannot be undone.`)) return
+    setDeletingId(id)
+    try {
+      await api.delete(`/invoices/${id}`)
+      toast.success('Invoice deleted.')
+      fetchInvoices()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Paid invoices cannot be deleted.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+  const handleEditOpen = (inv) => {
+    // Pre-fill the existing form state with invoice data
+    setForm({
+      project_id: inv.project_id,
+      template: inv.template,
+      currency: inv.currency,
+      tax_percent: inv.tax_percent,
+      notes: inv.notes || '',
+      due_date: inv.due_date?.split('T')[0] || '',
+      client_name: inv.client_name || '',
+      client_email: inv.client_email || '',
+      client_phone: inv.client_phone || '',
+      client_address: inv.client_address || '',
+      client_gstin: inv.client_gstin || '',
+      items: JSON.parse(inv.items || '[]')
+    })
+    setEditingInvoice(inv.id)
+    setShowForm(true)
+  }
 
   return (
     <div className="space-y-6">
@@ -355,6 +398,26 @@ export default function InvoiceList() {
                             <CheckCircle size={14} />
                           </button>
                         )}
+                        <button
+                          onClick={() => handleEditOpen(inv)}
+                          disabled={inv.status === 'paid'}
+                          className="p-1.5 rounded-lg hover:bg-cream text-muted hover:text-oxford
+             transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          title={inv.status === 'paid' ? 'Cannot edit paid invoice' : 'Edit'}
+                        >
+                          <Edit2 size={14} />
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteInvoice(inv.id, inv.invoice_number)}
+                          disabled={deletingId === inv.id || inv.status === 'paid'}
+                          className="p-1.5 rounded-lg hover:bg-red-50 text-muted hover:text-red-500
+             transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          title={inv.status === 'paid' ? 'Cannot delete paid invoice' : 'Delete'}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+
                       </div>
                     </td>
                   </tr>

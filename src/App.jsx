@@ -21,6 +21,9 @@ import ProjectDetail    from './pages/admin/projects/ProjectDetail'
 import PaymentsList     from './pages/admin/payments/PaymentsList'
 import MaintenanceList  from './pages/admin/maintenance/MaintenanceList'
 import AdminMessages    from './pages/admin/messages/MessagesList'
+import ClientManager    from './pages/admin/clients/ClientManager'
+import AdminMeetings     from './pages/admin/meetings/MeetingsList'
+import InvoiceList     from './pages/admin/invoices/InvoiceList'
 
 // Client
 import ClientLayout      from './layouts/ClientLayout'
@@ -33,8 +36,6 @@ import ClientMessages    from './pages/client/Messages'
 import ClientAgreement   from './pages/client/Agreement'
 import ClientInvoices    from './pages/client/Invoices'
 import ClientMeetings    from './pages/client/Meetings'
-import AdminMeetings     from './pages/admin/meetings/MeetingsList'
-import InvoiceList       from './pages/admin/invoices/InvoiceList'
 
 const RootRedirect = () => {
   const { user, loading } = useAuth()
@@ -64,6 +65,9 @@ export default function App() {
         <Route path="payments"        element={<PaymentsList />} />
         <Route path="maintenance"     element={<MaintenanceList />} />
         <Route path="messages"        element={<AdminMessages />} />
+        <Route path="clients"         element={<ClientManager />} />
+        <Route path="meetings"        element={<AdminMeetings />} />
+        <Route path="invoices"        element={<InvoiceList />} />
       </Route>
 
       {/* Client portal */}

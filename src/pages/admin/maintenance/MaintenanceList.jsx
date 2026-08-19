@@ -4,23 +4,25 @@ import api from '../../../api/axios'
 import toast from 'react-hot-toast'
 import {
   Wrench, CheckCircle, Clock, AlertCircle,
-  ChevronDown, ChevronUp, Shield
+  ChevronDown, ChevronUp, Shield, Trash2
 } from 'lucide-react'
 import clsx from 'clsx'
+
 
 const STATUS_OPTIONS = ['submitted', 'reviewing', 'in_progress', 'done']
 
 const STATUS_STYLE = {
-  submitted:   'badge-amber',
-  reviewing:   'badge-blue',
+  submitted: 'badge-amber',
+  reviewing: 'badge-blue',
   in_progress: 'badge-oxford',
-  done:        'badge-green',
+  done: 'badge-green',
 }
 
 export default function MaintenanceList() {
   const [requests, setRequests] = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [filter,   setFilter]   = useState('')
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('')
+  
 
   const fetchRequests = () => {
     const params = filter ? `?status=${filter}` : ''
@@ -29,6 +31,7 @@ export default function MaintenanceList() {
       .catch(() => toast.error('Failed to load requests.'))
       .finally(() => setLoading(false))
   }
+  // Request-specific delete is handled inside RequestCard
 
   useEffect(() => { fetchRequests() }, [filter])
 
@@ -51,11 +54,11 @@ export default function MaintenanceList() {
       {/* Summary pills */}
       <div className="flex gap-3 flex-wrap">
         {[
-          { key: '',           label: 'All',         count: requests.length },
-          { key: 'submitted',  label: 'Submitted',   count: counts.submitted   || 0 },
-          { key: 'reviewing',  label: 'Reviewing',   count: counts.reviewing   || 0 },
-          { key: 'in_progress',label: 'In Progress', count: counts.in_progress || 0 },
-          { key: 'done',       label: 'Done',        count: counts.done        || 0 },
+          { key: '', label: 'All', count: requests.length },
+          { key: 'submitted', label: 'Submitted', count: counts.submitted || 0 },
+          { key: 'reviewing', label: 'Reviewing', count: counts.reviewing || 0 },
+          { key: 'in_progress', label: 'In Progress', count: counts.in_progress || 0 },
+          { key: 'done', label: 'Done', count: counts.done || 0 },
         ].map(s => (
           <button
             key={s.key}
@@ -106,11 +109,11 @@ export default function MaintenanceList() {
 
 // ── Request Card ─────────────────────────────
 function RequestCard({ request: r, onUpdate }) {
-  const [open,      setOpen]      = useState(r.status === 'submitted')
-  const [note,      setNote]      = useState(r.admin_note || '')
-  const [status,    setStatus]    = useState(r.status)
-  const [saving,    setSaving]    = useState(false)
-  const [activating,setActivating]= useState(false)
+  const [open, setOpen] = useState(r.status === 'submitted')
+  const [note, setNote] = useState(r.admin_note || '')
+  const [status, setStatus] = useState(r.status)
+  const [saving, setSaving] = useState(false)
+  const [activating, setActivating] = useState(false)
 
   const handleSave = async () => {
     setSaving(true)
@@ -139,6 +142,22 @@ function RequestCard({ request: r, onUpdate }) {
     }
   }
 
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async () => {
+    if (!confirm('Delete this maintenance request?')) return
+    setDeleting(true)
+    try {
+      await api.delete(`/maintenance/${r.id}`)
+      toast.success('Request deleted.')
+      onUpdate()
+    } catch {
+      toast.error('Delete failed.')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="card p-0 overflow-hidden">
 
@@ -150,8 +169,8 @@ function RequestCard({ request: r, onUpdate }) {
         {r.status === 'done'
           ? <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
           : r.status === 'in_progress'
-          ? <Clock       size={18} className="text-blue-500  flex-shrink-0" />
-          : <AlertCircle size={18} className="text-amber-500 flex-shrink-0" />
+            ? <Clock size={18} className="text-blue-500  flex-shrink-0" />
+            : <AlertCircle size={18} className="text-amber-500 flex-shrink-0" />
         }
 
         <div className="flex-1 min-w-0 text-left">
@@ -174,7 +193,7 @@ function RequestCard({ request: r, onUpdate }) {
         </span>
 
         {open
-          ? <ChevronUp   size={16} className="text-muted flex-shrink-0" />
+          ? <ChevronUp size={16} className="text-muted flex-shrink-0" />
           : <ChevronDown size={16} className="text-muted flex-shrink-0" />
         }
       </button>
@@ -219,6 +238,17 @@ function RequestCard({ request: r, onUpdate }) {
             >
               {saving ? 'Saving...' : 'Save & Notify Client'}
             </button>
+            <div className="pt-3 border-t border-border">
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="btn-ghost text-xs py-1.5 px-3 text-red-500 hover:bg-red-50 transition-colors"
+              >
+                <Trash2 size={13} />
+                {deleting ? 'Deleting...' : 'Delete Request'}
+              </button>
+            </div>
+
           </div>
 
           {/* TechCare activation (if not already active) */}

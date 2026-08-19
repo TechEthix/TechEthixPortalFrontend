@@ -3,29 +3,33 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../../api/axios'
 import toast from 'react-hot-toast'
-import { Plus, Send, Eye, Copy, ArrowUpRight } from 'lucide-react'
+import { Plus, Send, Eye, Copy, ArrowUpRight, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
 
 const STATUS_STYLE = {
-  draft:    'badge-gray',
-  sent:     'badge-blue',
-  viewed:   'badge-amber',
+  draft: 'badge-gray',
+  sent: 'badge-blue',
+  viewed: 'badge-amber',
   accepted: 'badge-green',
   rejected: 'badge-red',
-  expired:  'badge-gray',
+  expired: 'badge-gray',
 }
 
 export default function ProposalsList() {
   const [proposals, setProposals] = useState([])
-  const [loading,   setLoading]   = useState(true)
-  const [filter,    setFilter]    = useState('')
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('')
+  const [deletingId, setDeletingId] = useState(null)
 
-  useEffect(() => {
+  const fetchProposals = () => {
+    setLoading(true)
     api.get('/proposals')
       .then(r => setProposals(r.data.data || []))
       .catch(() => toast.error('Failed to load proposals.'))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { fetchProposals() }, [])
 
   const handleSend = async (id) => {
     try {
@@ -55,6 +59,20 @@ export default function ProposalsList() {
     return acc
   }, {})
 
+  const handleDeleteProposal = async (id, title) => {
+    if (!confirm(`Delete proposal "${title}"? This cannot be undone.`)) return
+    setDeletingId(id)
+    try {
+      await api.delete(`/proposals/${id}`)
+      toast.success('Proposal deleted.')
+      fetchProposals()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Delete failed.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
 
@@ -70,7 +88,7 @@ export default function ProposalsList() {
 
       {/* Summary */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-        {['draft','sent','viewed','accepted','rejected','expired'].map(s => (
+        {['draft', 'sent', 'viewed', 'accepted', 'rejected', 'expired'].map(s => (
           <button key={s}
             onClick={() => setFilter(f => f === s ? '' : s)}
             className={clsx('card-sm text-left transition-all',
@@ -139,8 +157,9 @@ export default function ProposalsList() {
                             title="Send to client">
                             <Send size={14} />
                           </button>
+
                         )}
-                        {['sent','viewed'].includes(p.status) && (
+                        {['sent', 'viewed'].includes(p.status) && (
                           <button onClick={() => copyLink(p.unique_token)}
                             className="p-1.5 rounded-lg hover:bg-cream text-muted transition-colors"
                             title="Copy proposal link">
@@ -152,6 +171,17 @@ export default function ProposalsList() {
                           title="Preview proposal">
                           <Eye size={14} />
                         </a>
+                        <button
+                          onClick={() => handleDeleteProposal(p.id, p.title)}
+                          disabled={deletingId === p.id || p.status === 'accepted'}
+                          className="p-1.5 rounded-lg hover:bg-red-50 text-muted hover:text-red-500
+             transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          title={p.status === 'accepted' ? 'Cannot delete accepted proposal' : 'Delete'}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+
+
                       </div>
                     </td>
                   </tr>

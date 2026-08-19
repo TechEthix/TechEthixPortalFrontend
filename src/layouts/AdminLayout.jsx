@@ -18,11 +18,11 @@ const navItems = [
       { label: 'Pipeline',  to: '/admin/leads/kanban' },
     ]
   },
+  { label: 'Clients',    icon: Users,            to: '/admin/clients' },
   { label: 'Projects',   icon: FolderKanban,     to: '/admin/projects' },
   { label: 'Proposals',  icon: FileText,          to: '/admin/proposals' },
   { label: 'Payments',   icon: CreditCard,        to: '/admin/payments' },
   { label: 'Maintenance', icon: Wrench,            to: '/admin/maintenance' },
-  { label: 'Payments',   icon: CreditCard,        to: '/admin/payments' },
   { label: 'Invoices',   icon: FileText,            to: '/admin/invoices' },
   { label: 'Meetings',   icon: Calendar,            to: '/admin/meetings' },
   { label: 'Messages',   icon: MessageSquare,      to: '/admin/messages' },

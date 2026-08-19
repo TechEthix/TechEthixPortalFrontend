@@ -4,7 +4,7 @@ import api from '../../../api/axios'
 import toast from 'react-hot-toast'
 import {
   CreditCard, TrendingUp, Clock, CheckCircle,
-  RefreshCw, Download
+  RefreshCw, Download, Plus, Trash2, Edit2, X
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -17,17 +17,72 @@ const STATUS_STYLE = {
 }
 
 const TYPE_LABEL = {
-  advance:         'Advance (50%)',
-  final:           'Final (50%)',
+  advance:         'Advance (35%)',
+  midpoint:        'Midpoint (35%)',
+  final:           'Final (30%)',
   techcare_monthly:'TechCare Monthly',
 }
 
 export default function PaymentsList() {
-  const [payments, setPayments] = useState([])
-  const [summary,  setSummary]  = useState({})
-  const [loading,  setLoading]  = useState(true)
-  const [filters,  setFilters]  = useState({ status: '', type: '' })
-  const [markingId, setMarkingId] = useState(null)
+  const [payments, setPayments]  = useState([])
+  const [summary,  setSummary]   = useState({})
+  const [loading,  setLoading]   = useState(true)
+  const [filters,  setFilters]   = useState({ status: '', type: '' })
+  const [markingId, setMarkingId]= useState(null)
+  const [showCreate, setShowCreate] = useState(false)
+  const [creating,   setCreating]  = useState(false)
+  const [editingId,  setEditingId] = useState(null)
+  const [editForm,   setEditForm]  = useState({ amount: '', status: '', note: '' })
+  const [projects,   setProjects]  = useState([])
+  const [createForm, setCreateForm] = useState({
+    project_id: '', type: 'advance', amount: '', status: 'pending', note: ''
+  })
+
+  const openCreate = async () => {
+    setShowCreate(true)
+    try {
+      const { data } = await api.get('/projects?limit=100')
+      setProjects(data.data || [])
+    } catch {}
+  }
+
+  const handleCreate = async e => {
+    e.preventDefault()
+    setCreating(true)
+    try {
+      await api.post('/payments/manual', createForm)
+      toast.success('Payment record created.')
+      setShowCreate(false)
+      setCreateForm({ project_id: '', type: 'advance', amount: '', status: 'pending', note: '' })
+      fetchPayments()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed.')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleEdit = async (paymentId) => {
+    try {
+      await api.put(`/payments/${paymentId}`, editForm)
+      toast.success('Payment updated.')
+      setEditingId(null)
+      fetchPayments()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed.')
+    }
+  }
+
+  const handleDelete = async (paymentId) => {
+    if (!confirm('Delete this payment record?')) return
+    try {
+      await api.delete(`/payments/${paymentId}`)
+      toast.success('Payment deleted.')
+      fetchPayments()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Delete failed — paid payments cannot be deleted.')
+    }
+  }
 
   const fetchPayments = async () => {
     setLoading(true)
@@ -98,6 +153,9 @@ export default function PaymentsList() {
         <button onClick={exportCSV} className="btn-secondary">
           <Download size={15} /> Export CSV
         </button>
+        <button onClick={openCreate} className="btn-secondary text-sm">
+          <Plus size={14} /> Add Payment
+        </button>
       </div>
 
       {/* Revenue stat cards */}
@@ -163,8 +221,9 @@ export default function PaymentsList() {
           value={filters.type}
           onChange={e => setFilters(p => ({ ...p, type: e.target.value }))}>
           <option value="">All types</option>
-          <option value="advance">Advance</option>
-          <option value="final">Final</option>
+          <option value="advance">Advance (35%)</option>
+          <option value="midpoint">Midpoint (35%)</option>
+          <option value="final">Final (30%)</option>
           <option value="techcare_monthly">TechCare</option>
         </select>
         {(filters.status || filters.type) && (
@@ -211,8 +270,9 @@ export default function PaymentsList() {
                     <td className="text-muted">{p.client_name}</td>
                     <td>
                       <span className={clsx('badge text-xs',
-                        p.type === 'advance' ? 'badge-oxford' :
-                        p.type === 'final'   ? 'badge-green'  : 'badge-blue'
+                        p.type === 'advance'  ? 'badge-oxford' :
+                        p.type === 'midpoint' ? 'badge-blue'   :
+                        p.type === 'final'    ? 'badge-green'  : 'badge-gray'
                       )}>
                         {TYPE_LABEL[p.type] || p.type}
                       </span>
@@ -247,15 +307,68 @@ export default function PaymentsList() {
                       ) : <span className="text-xs text-muted">—</span>}
                     </td>
                     <td>
-                      {p.status === 'pending' && (
-                        <button
-                          onClick={() => handleMarkPaid(p.id, p.project_title)}
-                          disabled={markingId === p.id}
-                          className="text-xs px-2 py-1 rounded-lg bg-green-50 text-green-600
+                      <div className="flex items-center gap-1">
+                        {p.status !== 'paid' && (
+                          <>
+                            <button
+                              onClick={() => {
+                                setEditingId(p.id)
+                                setEditForm({ amount: p.amount, status: p.status, note: p.cashfree_payment_id || '' })
+                              }}
+                              className="p-1.5 rounded-lg hover:bg-cream text-muted hover:text-oxford transition-colors"
+                              title="Edit"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleMarkPaid(p.id, p.project_title)}
+                              disabled={markingId === p.id}
+                              className="text-xs px-2 py-1 rounded-lg bg-green-50 text-green-600
                                      hover:bg-green-100 transition-colors font-medium"
-                        >
-                          {markingId === p.id ? '...' : 'Mark Paid'}
-                        </button>
+                            >
+                              {markingId === p.id ? '...' : 'Mark Paid'}
+                            </button>
+                            <button
+                              onClick={() => handleDelete(p.id)}
+                              className="p-1.5 rounded-lg hover:bg-red-50 text-muted hover:text-red-500 transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                      {/* Inline edit form */}
+                      {editingId === p.id && (
+                        <div className="mt-2 p-3 bg-cream rounded-xl space-y-2 min-w-64">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-xs text-muted">Amount (₹)</label>
+                              <input type="number" className="form-input text-sm py-1.5"
+                                value={editForm.amount}
+                                onChange={e => setEditForm(p => ({ ...p, amount: e.target.value }))} />
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted">Status</label>
+                              <select className="form-select text-sm py-1.5" value={editForm.status}
+                                onChange={e => setEditForm(p => ({ ...p, status: e.target.value }))}>
+                                <option value="pending">pending</option>
+                                <option value="initiated">initiated</option>
+                                <option value="paid">paid</option>
+                                <option value="failed">failed</option>
+                              </select>
+                            </div>
+                          </div>
+                          <input className="form-input text-sm py-1.5" value={editForm.note}
+                            onChange={e => setEditForm(p => ({ ...p, note: e.target.value }))}
+                            placeholder="Reference / note (optional)" />
+                          <div className="flex gap-2">
+                            <button onClick={() => setEditingId(null)}
+                              className="btn-secondary flex-1 justify-center text-xs py-1.5">Cancel</button>
+                            <button onClick={() => handleEdit(p.id)}
+                              className="btn-primary flex-1 justify-center text-xs py-1.5">Save</button>
+                          </div>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -265,6 +378,73 @@ export default function PaymentsList() {
           </div>
         )}
       </div>
+
+      {/* Create payment modal */}
+      {showCreate && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="card w-full max-w-md">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-syne font-700 text-oxford text-lg">Add Payment Record</h3>
+              <button onClick={() => setShowCreate(false)} className="text-muted hover:text-oxford">
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="form-label">Project *</label>
+                <select className="form-select" value={createForm.project_id}
+                  onChange={e => setCreateForm(p => ({ ...p, project_id: e.target.value }))} required>
+                  <option value="">Select project</option>
+                  {projects.map(proj => (
+                    <option key={proj.id} value={proj.id}>{proj.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="form-label">Type</label>
+                  <select className="form-select" value={createForm.type}
+                    onChange={e => setCreateForm(p => ({ ...p, type: e.target.value }))}>
+                    <option value="advance">Advance (35%)</option>
+                    <option value="midpoint">Midpoint (35%)</option>
+                    <option value="final">Final (30%)</option>
+                    <option value="techcare_monthly">TechCare Monthly</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label">Status</label>
+                  <select className="form-select" value={createForm.status}
+                    onChange={e => setCreateForm(p => ({ ...p, status: e.target.value }))}>
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="form-label">Amount (₹) *</label>
+                <input type="number" className="form-input" value={createForm.amount}
+                  onChange={e => setCreateForm(p => ({ ...p, amount: e.target.value }))}
+                  placeholder="17500" min="1" required />
+              </div>
+              <div>
+                <label className="form-label">Note / Reference</label>
+                <input className="form-input" value={createForm.note}
+                  onChange={e => setCreateForm(p => ({ ...p, note: e.target.value }))}
+                  placeholder="UPI / cash / manual note" />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowCreate(false)}
+                  className="btn-secondary flex-1 justify-center">Cancel</button>
+                <button type="submit" disabled={creating}
+                  className="btn-primary flex-1 justify-center">
+                  {creating ? 'Creating...' : 'Add Payment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

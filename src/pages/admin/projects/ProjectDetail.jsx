@@ -8,7 +8,7 @@ import AgreementEditor from './AgreementEditor'
 import {
   ArrowLeft, Plus, CheckCircle, Clock, Circle,
   Truck, Edit2, Trash2, ChevronDown, ChevronUp,
-  AlertCircle, CreditCard
+  AlertCircle, CreditCard, Save, X
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -21,19 +21,22 @@ const STATUS_STYLE = {
 
 export default function ProjectDetail() {
   const { id } = useParams()
-  const [project,   setProject]   = useState(null)
+  const [project, setProject] = useState(null)
   const [revisions, setRevisions] = useState([])
-  const [loading,   setLoading]   = useState(true)
+  const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('milestones')
+  const [editingMilestone, setEditingMilestone] = useState(null)
+  const [milestoneEdit, setMilestoneEdit] = useState({ title: '', description: '', due_date: '' })
+
 
   // Milestone form state
   const [showMilestoneForm, setShowMilestoneForm] = useState(false)
-  const [milestoneForm,     setMilestoneForm]     = useState({ title: '', description: '', due_date: '' })
-  const [savingMilestone,   setSavingMilestone]   = useState(false)
+  const [milestoneForm, setMilestoneForm] = useState({ title: '', description: '', due_date: '' })
+  const [savingMilestone, setSavingMilestone] = useState(false)
 
   // Complete milestone state
-  const [completingId,  setCompletingId]  = useState(null)
-  const [completeNote,  setCompleteNote]  = useState('')
+  const [completingId, setCompletingId] = useState(null)
+  const [completeNote, setCompleteNote] = useState('')
 
   // Project status update
   const [updatingStatus, setUpdatingStatus] = useState(false)
@@ -48,7 +51,7 @@ export default function ProjectDetail() {
   const fetchRevisions = () => {
     api.get(`/projects/${id}/revisions`)
       .then(r => setRevisions(r.data.data || []))
-      .catch(() => {})
+      .catch(() => { })
   }
 
   useEffect(() => { fetchProject(); fetchRevisions() }, [id])
@@ -68,6 +71,16 @@ export default function ProjectDetail() {
       toast.error('Failed to add milestone.')
     } finally {
       setSavingMilestone(false)
+    }
+  }
+  const handleEditMilestone = async (milestoneId) => {
+    try {
+      await api.put(`/projects/${id}/milestones/${milestoneId}`, milestoneEdit)
+      toast.success('Milestone updated.')
+      setEditingMilestone(null)
+      fetchProject()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed.')
     }
   }
 
@@ -143,7 +156,7 @@ export default function ProjectDetail() {
   if (!project) return <div className="text-center py-16"><p className="text-oxford font-syne font-700">Project not found.</p></div>
 
   const milestones = project.milestones || []
-  const payments   = project.payments   || []
+  const payments = project.payments || []
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -199,8 +212,8 @@ export default function ProjectDetail() {
               disabled={updatingStatus}
               className="form-select text-xs py-1.5"
             >
-              {['pending_payment','active','on_hold','in_review','delivered','in_maintenance','techcare','completed'].map(s => (
-                <option key={s} value={s}>{s.replace(/_/g,' ')}</option>
+              {['pending_payment', 'active', 'on_hold', 'in_review', 'delivered', 'in_maintenance', 'techcare', 'completed'].map(s => (
+                <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
               ))}
             </select>
           </div>
@@ -224,6 +237,7 @@ export default function ProjectDetail() {
               </span>
             )}
           </button>
+
         ))}
       </div>
 
@@ -243,19 +257,19 @@ export default function ProjectDetail() {
               <div>
                 <label className="form-label">Milestone Title *</label>
                 <input className="form-input" value={milestoneForm.title}
-                  onChange={e => setMilestoneForm(p => ({...p, title: e.target.value}))}
+                  onChange={e => setMilestoneForm(p => ({ ...p, title: e.target.value }))}
                   placeholder="e.g. Design Approval" />
               </div>
               <div>
                 <label className="form-label">Description</label>
                 <textarea className="form-textarea" rows={2} value={milestoneForm.description}
-                  onChange={e => setMilestoneForm(p => ({...p, description: e.target.value}))}
+                  onChange={e => setMilestoneForm(p => ({ ...p, description: e.target.value }))}
                   placeholder="What will be delivered in this milestone?" />
               </div>
               <div>
                 <label className="form-label">Due Date</label>
                 <input type="date" className="form-input" value={milestoneForm.due_date}
-                  onChange={e => setMilestoneForm(p => ({...p, due_date: e.target.value}))} />
+                  onChange={e => setMilestoneForm(p => ({ ...p, due_date: e.target.value }))} />
               </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setShowMilestoneForm(false)} className="btn-secondary flex-1 justify-center text-xs py-2">Cancel</button>
@@ -275,10 +289,10 @@ export default function ProjectDetail() {
                 <div key={m.id} className="border border-border rounded-xl overflow-hidden">
                   <div className="flex items-center gap-3 p-4">
                     {/* Status icon */}
-                    {m.status === 'approved'   && <CheckCircle size={20} className="text-green-500 flex-shrink-0" />}
-                    {m.status === 'completed'  && <AlertCircle size={20} className="text-amber-500 flex-shrink-0" />}
-                    {m.status === 'in_progress'&& <Clock       size={20} className="text-blue-500  flex-shrink-0" />}
-                    {m.status === 'pending'    && <Circle      size={20} className="text-border     flex-shrink-0" />}
+                    {m.status === 'approved' && <CheckCircle size={20} className="text-green-500 flex-shrink-0" />}
+                    {m.status === 'completed' && <AlertCircle size={20} className="text-amber-500 flex-shrink-0" />}
+                    {m.status === 'in_progress' && <Clock size={20} className="text-blue-500  flex-shrink-0" />}
+                    {m.status === 'pending' && <Circle size={20} className="text-border     flex-shrink-0" />}
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -287,12 +301,12 @@ export default function ProjectDetail() {
                         <span className={clsx('badge text-xs', {
                           'badge-green': m.status === 'approved',
                           'badge-amber': m.status === 'completed',
-                          'badge-blue':  m.status === 'in_progress',
-                          'badge-gray':  m.status === 'pending',
+                          'badge-blue': m.status === 'in_progress',
+                          'badge-gray': m.status === 'pending',
                         })}>
                           {m.status === 'completed' ? 'Awaiting Approval' :
-                           m.status === 'in_progress' ? 'In Progress' :
-                           m.status === 'approved' ? 'Approved' : 'Pending'}
+                            m.status === 'in_progress' ? 'In Progress' :
+                              m.status === 'approved' ? 'Approved' : 'Pending'}
                         </span>
                       </div>
                       {m.description && <p className="text-xs text-muted mt-0.5 truncate">{m.description}</p>}
@@ -318,8 +332,47 @@ export default function ProjectDetail() {
                       >
                         <Trash2 size={14} />
                       </button>
+                      <button
+                        onClick={() => {
+                          setEditingMilestone(m.id)
+                          setMilestoneEdit({
+                            title: m.title,
+                            description: m.description || '',
+                            due_date: m.due_date?.split('T')[0] || ''
+                          })
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-cream text-muted hover:text-oxford transition-colors"
+                        title="Edit milestone"
+                      >
+                        <Edit2 size={14} />
+                      </button>
                     </div>
                   </div>
+
+// STEP 4 — Inline edit form — show below milestone when editingMilestone === m.id:
+                  {editingMilestone === m.id && (
+                    <div className="mt-3 pt-3 border-t border-border space-y-3">
+                      <input className="form-input text-sm" value={milestoneEdit.title}
+                        onChange={e => setMilestoneEdit(p => ({ ...p, title: e.target.value }))}
+                        placeholder="Milestone title" />
+                      <textarea className="form-textarea text-sm" rows={2}
+                        value={milestoneEdit.description}
+                        onChange={e => setMilestoneEdit(p => ({ ...p, description: e.target.value }))}
+                        placeholder="Description (optional)" />
+                      <input type="date" className="form-input text-sm" value={milestoneEdit.due_date}
+                        onChange={e => setMilestoneEdit(p => ({ ...p, due_date: e.target.value }))} />
+                      <div className="flex gap-2">
+                        <button onClick={() => setEditingMilestone(null)}
+                          className="btn-secondary flex-1 justify-center text-xs py-2">
+                          <X size={13} /> Cancel
+                        </button>
+                        <button onClick={() => handleEditMilestone(m.id)}
+                          className="btn-primary flex-1 justify-center text-xs py-2">
+                          <Save size={13} /> Save
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Complete form */}
                   {completingId === m.id && (
@@ -386,7 +439,7 @@ export default function ProjectDetail() {
               {payments.map(p => (
                 <div key={p.id} className="flex items-center justify-between p-4 border border-border rounded-xl">
                   <div>
-                    <p className="font-medium text-oxford capitalize">{p.type.replace(/_/g,' ')} Payment</p>
+                    <p className="font-medium text-oxford capitalize">{p.type.replace(/_/g, ' ')} Payment</p>
                     <p className="text-xs text-muted mt-0.5">
                       {p.paid_at ? `Paid on ${new Date(p.paid_at).toLocaleDateString('en-IN')}` : 'Pending'}
                     </p>
@@ -418,13 +471,13 @@ export default function ProjectDetail() {
           <h3 className="font-syne font-700 text-oxford mb-4">Project Details</h3>
           <div className="space-y-3 text-sm">
             {[
-              ['Client',           project.client_name],
-              ['Email',            project.client_email],
-              ['Phone',            project.client_phone],
-              ['Start Date',       project.start_date ? new Date(project.start_date).toLocaleDateString('en-IN') : '—'],
-              ['Expected Delivery',project.expected_delivery ? new Date(project.expected_delivery).toLocaleDateString('en-IN') : '—'],
-              ['Actual Delivery',  project.actual_delivery ? new Date(project.actual_delivery).toLocaleDateString('en-IN') : '—'],
-              ['Revisions Used',   `${project.revision_used} / ${project.revision_total}`],
+              ['Client', project.client_name],
+              ['Email', project.client_email],
+              ['Phone', project.client_phone],
+              ['Start Date', project.start_date ? new Date(project.start_date).toLocaleDateString('en-IN') : '—'],
+              ['Expected Delivery', project.expected_delivery ? new Date(project.expected_delivery).toLocaleDateString('en-IN') : '—'],
+              ['Actual Delivery', project.actual_delivery ? new Date(project.actual_delivery).toLocaleDateString('en-IN') : '—'],
+              ['Revisions Used', `${project.revision_used} / ${project.revision_total}`],
               ['Maintenance Used', `${project.maintenance_used} / ${project.maintenance_total}`],
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between py-2 border-b border-border last:border-0">
@@ -449,12 +502,12 @@ export default function ProjectDetail() {
 
 // ── Revision Card ────────────────────────────
 function RevisionCard({ revision, onRespond }) {
-  const [open,     setOpen]     = useState(revision.status === 'submitted')
+  const [open, setOpen] = useState(revision.status === 'submitted')
   const [response, setResponse] = useState(revision.admin_response || '')
 
   const SCOPE_OPTIONS = [
-    { value: 'within_scope',   label: 'Within Scope — Fix it (free)' },
-    { value: 'out_of_scope',   label: 'Out of Scope — Requires extra charge' },
+    { value: 'within_scope', label: 'Within Scope — Fix it (free)' },
+    { value: 'out_of_scope', label: 'Out of Scope — Requires extra charge' },
   ]
 
   return (
@@ -471,10 +524,10 @@ function RevisionCard({ revision, onRespond }) {
         <div className="flex items-center gap-2">
           <span className={clsx('badge text-xs', {
             'badge-amber': revision.status === 'submitted',
-            'badge-blue':  revision.status === 'reviewing',
+            'badge-blue': revision.status === 'reviewing',
             'badge-green': revision.status === 'done',
-            'badge-red':   revision.status === 'rejected',
-            'badge-gray':  !['submitted','reviewing','done','rejected'].includes(revision.status),
+            'badge-red': revision.status === 'rejected',
+            'badge-gray': !['submitted', 'reviewing', 'done', 'rejected'].includes(revision.status),
           })}>
             {revision.status}
           </span>

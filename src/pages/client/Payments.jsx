@@ -11,13 +11,15 @@ import {
 import clsx from 'clsx'
 
 const TYPE_LABEL = {
-  advance:          'Advance Payment (50%)',
-  final:            'Final Payment (50%)',
+  advance:          'Advance Payment (35%)',
+  midpoint:         'Midpoint Payment (35%)',
+  final:            'Final Payment (30%)',
   techcare_monthly: 'TechCare Monthly',
 }
 
 const TYPE_DESC = {
   advance:  'Required to activate your project and start work.',
+  midpoint: 'Due at project midpoint before final phase begins.',
   final:    'Due after you approve the final project delivery.',
   techcare_monthly: 'Monthly support and maintenance subscription.',
 }
@@ -156,8 +158,9 @@ function PaymentCard({ payment, onPay, paying, onRefresh }) {
   const isInitiated = payment.status === 'initiated'
 
   const TYPE_LABEL = {
-    advance:          'Advance Payment (50%)',
-    final:            'Final Payment (50%)',
+    advance:          'Advance Payment (35%)',
+    midpoint:         'Midpoint Payment (35%)',
+    final:            'Final Payment (30%)',
     techcare_monthly: 'TechCare Monthly',
   }
 

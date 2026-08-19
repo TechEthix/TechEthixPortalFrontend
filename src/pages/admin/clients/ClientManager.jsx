@@ -1,3 +1,13 @@
+// client/src/pages/admin/clients/ClientManager.jsx
+// ============================================================
+// NEW FILE — complete new page, no existing file to patch
+// Add route in App.jsx:
+//   import ClientManager from './pages/admin/clients/ClientManager'
+//   <Route path="clients" element={<ClientManager />} />
+// Add to AdminLayout navItems:
+//   { label: 'Clients', icon: Users, to: '/admin/clients' }
+// ============================================================
+
 import { useEffect, useState } from 'react'
 import api from '../../../api/axios'
 import toast from 'react-hot-toast'
